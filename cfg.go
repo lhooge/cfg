@@ -75,17 +75,17 @@ func parse(file *os.File, dest interface{}) error {
 		line = bytes.TrimLeftFunc(line, unicode.IsSpace)
 
 		if len(line) == 0 {
-			break
+			continue
 		}
 
 		if line[0] == '#' {
-			break
+			continue
 		}
 
 		kv := bytes.SplitN(line, []byte("="), 2)
 
 		if len(kv) < 2 {
-			break
+			continue
 		}
 
 		key := string(bytes.TrimRightFunc(kv[0], unicode.IsSpace))
@@ -93,7 +93,7 @@ func parse(file *os.File, dest interface{}) error {
 		kvmap[key] = value
 	}
 
-	err := setField(kvmap, dest)
+	err := searchFields(kvmap, dest)
 
 	if err != nil {
 		return err
@@ -107,7 +107,7 @@ const (
 	tagDefault = "default"
 )
 
-func setField(kv map[string]string, dest interface{}) error {
+func searchFields(kv map[string]string, dest interface{}) error {
 	v := reflect.ValueOf(dest)
 
 	if v.Kind() != reflect.Ptr {
@@ -124,6 +124,10 @@ func setField(kv map[string]string, dest interface{}) error {
 	el := v.Elem()
 
 	for i := 0; i < el.NumField(); i++ {
+		if el.Field(i).Kind() == reflect.Struct {
+			searchFields(kv, el.Field(i).Addr().Interface())
+			continue
+		}
 		if el.Field(i).CanSet() {
 			sKey := el.Type().Field(i).Tag.Get(tagCfg)
 
@@ -140,7 +144,7 @@ func setField(kv map[string]string, dest interface{}) error {
 			value, ok := kv[sKey]
 
 			if ok {
-				err := setType(el.Field(i), value)
+				err := setField(el.Field(i), value)
 
 				if err != nil {
 					return err
@@ -152,7 +156,7 @@ func setField(kv map[string]string, dest interface{}) error {
 	}
 
 	for _, v := range fieldDefaults {
-		err := setType(v.field, v.def)
+		err := setField(v.field, v.def)
 
 		if err != nil {
 			return err
@@ -162,7 +166,7 @@ func setField(kv map[string]string, dest interface{}) error {
 	return nil
 }
 
-func setType(field reflect.Value, value string) error {
+func setField(field reflect.Value, value string) error {
 	switch field.Kind() {
 	case reflect.String:
 		field.SetString(value)

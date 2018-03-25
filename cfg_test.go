@@ -60,6 +60,31 @@ func TestStandardConfig(t *testing.T) {
 
 	expDuration, _ := time.ParseDuration("10m")
 	if c.SessionTimeout != expDuration {
-		t.Errorf("SessionTimout expected to be /dev/null but was %v", c.SessionTimeout)
+		t.Errorf("SessionTimeout expected to be  but was %v", c.SessionTimeout)
+	}
+}
+
+func TestInnerStruct(t *testing.T) {
+	type Config struct {
+		Server struct {
+			Address string `cfg:"server_address"`
+			Port    int    `cfg:"server_port"`
+		}
+	}
+
+	AddConfig("./testcfg", "config.conf")
+
+	c := new(Config)
+	err := cfg.MergeConfigsInto(c)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	if c.Server.Address != "localhost" {
+		t.Errorf("server.Address expected to be localhost but was %s", c.Server.Address)
+	}
+	if c.Server.Port != 42 {
+		t.Errorf("server.Port expected to be 42 but was %d", c.Server.Port)
 	}
 }
