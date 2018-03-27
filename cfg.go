@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -125,6 +126,9 @@ func searchFields(kv map[string]string, dest interface{}) error {
 		if el.Field(i).CanSet() {
 			sKey := el.Type().Field(i).Tag.Get(tagCfg)
 
+			if sKey == "-" {
+				continue
+			}
 			def := reflectDefaults{
 				field: el.Field(i),
 				def:   el.Type().Field(i).Tag.Get(tagDefault),
@@ -175,7 +179,7 @@ func setField(field reflect.Value, value string) error {
 		iVal, err := strconv.ParseInt(value, 10, 64)
 
 		if err != nil {
-			return err
+			return fmt.Errorf("invalid value %s error %v", value, err)
 		}
 
 		field.SetInt(int64(iVal))
@@ -183,7 +187,7 @@ func setField(field reflect.Value, value string) error {
 		iVal, err := strconv.ParseUint(value, 10, 64)
 
 		if err != nil {
-			return err
+			return fmt.Errorf("invalid value %s error %v", value, err)
 		}
 
 		field.SetUint(uint64(iVal))
@@ -199,7 +203,7 @@ func setField(field reflect.Value, value string) error {
 			b, err = strconv.ParseBool(value)
 
 			if err != nil {
-				return err
+				return fmt.Errorf("invalid value %s error %v", value, err)
 			}
 		}
 
@@ -208,7 +212,7 @@ func setField(field reflect.Value, value string) error {
 		f, err := strconv.ParseFloat(value, 64)
 
 		if err != nil {
-			return err
+			return fmt.Errorf("invalid value %s error %v", value, err)
 		}
 
 		field.SetFloat(float64(f))
