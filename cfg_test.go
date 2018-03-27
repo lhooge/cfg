@@ -65,7 +65,7 @@ func TestStandardConfig(t *testing.T) {
 }
 
 func TestInnerStruct(t *testing.T) {
-	type Config struct {
+	type config struct {
 		Server struct {
 			Address string `cfg:"server_address"`
 			Port    int    `cfg:"server_port"`
@@ -74,7 +74,7 @@ func TestInnerStruct(t *testing.T) {
 
 	AddConfig("./testcfg", "config.conf")
 
-	c := new(Config)
+	c := new(config)
 	err := cfg.MergeConfigsInto(c)
 
 	if err != nil {
@@ -86,5 +86,21 @@ func TestInnerStruct(t *testing.T) {
 	}
 	if c.Server.Port != 42 {
 		t.Errorf("server.Port expected to be 42 but was %d", c.Server.Port)
+	}
+}
+
+func TestArrayConfig(t *testing.T) {
+	type config struct {
+		GroupList []string `cfg:"group_list"`
+	}
+
+	AddConfig("./testcfg", "config.conf")
+
+	c := new(config)
+
+	err := cfg.MergeConfigsInto(c)
+
+	if err != nil {
+		t.Error(err)
 	}
 }

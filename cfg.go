@@ -13,12 +13,6 @@ import (
 	"unicode"
 )
 
-var cfg *Config
-
-func init() {
-	cfg = new(Config)
-}
-
 type Config struct {
 	Files []File
 }
@@ -28,16 +22,16 @@ type File struct {
 	Path string
 }
 
-func AddConfig(path, name string) {
+func (c *Config) AddConfig(path, name string) {
 	f := File{
 		Path: path,
 		Name: name,
 	}
 
-	cfg.Files = append(cfg.Files, f)
+	c.Files = append(c.Files, f)
 }
 
-func (c Config) MergeConfigsInto(dest interface{}) error {
+func (c *Config) MergeConfigsInto(dest interface{}) error {
 	for _, v := range c.Files {
 		f, err := os.Open(filepath.Join(v.Path, v.Name))
 
