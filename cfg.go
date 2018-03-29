@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -23,6 +22,10 @@ type File struct {
 	Path string
 }
 
+type CustomType interface {
+	Unmarshal(value string) error
+}
+
 func (c *Config) AddConfig(path, name string) {
 	f := File{
 		Path: path,
@@ -32,7 +35,7 @@ func (c *Config) AddConfig(path, name string) {
 	c.Files = append(c.Files, f)
 }
 
-func (c *Config) MergeConfigsInto(dest interface{}) error {
+func (c Config) MergeConfigsInto(dest interface{}) error {
 	for _, v := range c.Files {
 		f, err := os.Open(filepath.Join(v.Path, v.Name))
 
@@ -166,6 +169,19 @@ func searchFields(kv map[string]string, dest interface{}) error {
 }
 
 func setField(field reflect.Value, value string) error {
+	customType := reflect.TypeOf((*CustomType)(nil)).Elem()
+
+	if reflect.PtrTo(field.Type()).Implements(customType) {
+		if c, ok := field.Addr().Interface().(CustomType); ok {
+			err := c.Unmarshal(value)
+
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
 	switch field.Kind() {
 	case reflect.String:
 		field.SetString(value)

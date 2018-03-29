@@ -6,7 +6,7 @@ import (
 )
 
 func TestStandardConfig(t *testing.T) {
-	type config struct {
+	type settings struct {
 		SessionName  string `cfg:"session_name"`
 		FileLocation string `cfg:"file_location" default:"/dev/null"`
 		Address      string
@@ -20,87 +20,142 @@ func TestStandardConfig(t *testing.T) {
 		SessionTimeout time.Duration `cfg:"session_timeout"`
 	}
 
-	c := config{}
+	c := addConfig("./testcfg", "config.conf")
 
-	AddConfig("./testcfg", "config.conf")
+	s := new(settings)
 
-	err := cfg.MergeConfigsInto(&c)
+	err := c.MergeConfigsInto(s)
 
 	if err != nil {
 		t.Error(err)
 	}
 
-	if c.SessionName != "the-session-name" {
-		t.Errorf("invalid value %s", c.SessionName)
+	if s.SessionName != "the-session-name" {
+		t.Errorf("invalid value %s", s.SessionName)
 	}
 
-	if c.FileLocation != "/dev/null" {
-		t.Errorf("FileLocation expected to be /dev/null but was %s", c.FileLocation)
+	if s.FileLocation != "/dev/null" {
+		t.Errorf("FileLocation expected to be /dev/null but was %s", s.FileLocation)
 	}
 
-	if c.Address != "127.0.0.1" {
-		t.Errorf("Address expected to be 127.0.0.1 but was %s", c.Address)
+	if s.Address != "127.0.0.1" {
+		t.Errorf("Address expected to be 127.0.0.1 but was %s", s.Address)
 	}
 
-	if c.Port != 8080 {
-		t.Errorf("Port expected to be 8080 but was %d", c.Port)
+	if s.Port != 8080 {
+		t.Errorf("Port expected to be 8080 but was %d", s.Port)
 	}
 
-	if c.Size != 30 {
-		t.Errorf("Size expected to be 30 but was %d", c.Size)
+	if s.Size != 30 {
+		t.Errorf("Size expected to be 30 but was %d", s.Size)
 	}
 
-	if !c.SSL {
-		t.Errorf("SSL expected to be true but was %t", c.SSL)
+	if !s.SSL {
+		t.Errorf("SSL expected to be true but was %t", s.SSL)
 	}
 
-	if !c.Verbose {
-		t.Errorf("Verbose expected to be true but was %t", c.Verbose)
+	if !s.Verbose {
+		t.Errorf("Verbose expected to be true but was %t", s.Verbose)
 	}
 
 	expDuration, _ := time.ParseDuration("10m")
-	if c.SessionTimeout != expDuration {
-		t.Errorf("SessionTimeout expected to be  but was %v", c.SessionTimeout)
+	if s.SessionTimeout != expDuration {
+		t.Errorf("SessionTimeout expected to be  but was %v", s.SessionTimeout)
 	}
 }
 
 func TestInnerStruct(t *testing.T) {
-	type config struct {
+	type settings struct {
 		Server struct {
 			Address string `cfg:"server_address"`
 			Port    int    `cfg:"server_port"`
 		}
 	}
 
-	AddConfig("./testcfg", "config.conf")
+	c := addConfig("./testcfg", "config.conf")
 
-	c := new(config)
-	err := cfg.MergeConfigsInto(c)
+	s := new(settings)
+
+	err := c.MergeConfigsInto(s)
 
 	if err != nil {
 		t.Error(err)
 	}
 
-	if c.Server.Address != "localhost" {
-		t.Errorf("server.Address expected to be localhost but was %s", c.Server.Address)
+	if s.Server.Address != "localhost" {
+		t.Errorf("server.Address expected to be localhost but was %s", s.Server.Address)
 	}
-	if c.Server.Port != 42 {
-		t.Errorf("server.Port expected to be 42 but was %d", c.Server.Port)
+	if s.Server.Port != 42 {
+		t.Errorf("server.Port expected to be 42 but was %d", s.Server.Port)
 	}
 }
 
 func TestArrayConfig(t *testing.T) {
-	type config struct {
+	type settings struct {
 		GroupList []string `cfg:"group_list"`
 	}
 
-	AddConfig("./testcfg", "config.conf")
+	c := addConfig("./testcfg", "config.conf")
 
-	c := new(config)
+	s := new(settings)
 
-	err := cfg.MergeConfigsInto(c)
+	err := c.MergeConfigsInto(s)
 
 	if err != nil {
 		t.Error(err)
 	}
+}
+
+type loginMethod int
+
+const (
+	mail = iota
+	username
+)
+
+func (lm *loginMethod) Unmarshal(value string) error {
+	m := loginMethod(username)
+	if value == "mail" {
+		m = loginMethod(mail)
+	}
+	lm = &m
+	return nil
+}
+
+func (lm loginMethod) String() string {
+	if lm == mail {
+		return "mail"
+	} else {
+		return "username"
+	}
+}
+
+func TestCustomType(t *testing.T) {
+	type settings struct {
+		Custom loginMethod `cfg:"login_method"`
+	}
+
+	c := addConfig("./testcfg", "config.conf")
+
+	s := new(settings)
+
+	err := c.MergeConfigsInto(s)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	if s.Custom != mail {
+		t.Errorf("s.Custom expected to be mail but was %s", s.Custom)
+	}
+}
+
+func addConfig(path, filename string) Config {
+	cfg := Config{
+		Files: make([]File, 0, 1),
+	}
+
+	cfg.AddConfig(path, filename)
+
+	return cfg
 }
