@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
 	"unicode"
 )
@@ -24,6 +25,50 @@ type File struct {
 
 type CustomType interface {
 	Unmarshal(value string) error
+}
+
+type FileSize uint64
+
+func (fs *FileSize) Unmarshal(value string) error {
+	size := FileSize(0)
+
+	if len(value) == 0 {
+		fs = &size
+		return nil
+	}
+
+	value = strings.ToLower(value)
+	last := len(value) - 1
+
+	mp := uint64(1)
+
+	if value[last] == 'b' {
+		switch value[last-1] {
+		case 't':
+			mp = mp << 40
+			value = strings.TrimSpace(value[:last-1])
+		case 'g':
+			mp = mp << 30
+			value = strings.TrimSpace(value[:last-1])
+		case 'm':
+			mp = mp << 20
+			value = strings.TrimSpace(value[:last-1])
+		case 'k':
+			mp = mp << 10
+			value = strings.TrimSpace(value[:last-1])
+		default:
+			value = strings.TrimSpace(value[:last])
+		}
+	}
+
+	ps, err := strconv.ParseUint(value, 10, 64)
+
+	if err != nil {
+		return err
+	}
+
+	*fs = FileSize(uint64(ps) * mp)
+	return nil
 }
 
 func (c *Config) AddConfig(path, name string) {
@@ -50,6 +95,24 @@ func (c Config) MergeConfigsInto(dest interface{}) error {
 		if err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func LoadConfig(file string, dest interface{}) error {
+	f, err := os.Open(file)
+
+	if err != nil {
+		return err
+	}
+
+	defer f.Close()
+
+	err = parse(f, dest)
+
+	if err != nil {
+		return err
 	}
 
 	return nil

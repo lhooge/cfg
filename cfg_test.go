@@ -118,7 +118,7 @@ func (lm *loginMethod) Unmarshal(value string) error {
 	if value == "mail" {
 		m = loginMethod(mail)
 	}
-	lm = &m
+	*lm = m
 	return nil
 }
 
@@ -145,11 +145,50 @@ func TestCustomType(t *testing.T) {
 		t.Error(err)
 	}
 
-	if s.Custom != mail {
-		t.Errorf("s.Custom expected to be mail but was %s", s.Custom)
+	if s.Custom != username {
+		t.Errorf("s.Custom expected to be username but was %s", s.Custom)
 	}
 }
 
+func TestFileSizes(t *testing.T) {
+	type settings struct {
+		Byte     FileSize `cfg:"file_size_byte"`
+		Kilobyte FileSize `cfg:"file_size_kilobyte"`
+		Megabyte FileSize `cfg:"file_size_megabyte"`
+		Gigabyte FileSize `cfg:"file_size_gigabyte"`
+		Terabyte FileSize `cfg:"file_size_terabyte"`
+		Empty    FileSize `cfg:"file_size_empty"`
+	}
+
+	c := addConfig("./testcfg", "config.conf")
+
+	s := new(settings)
+
+	err := c.MergeConfigsInto(s)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	if s.Byte != 1<<10 {
+		t.Errorf("s.Byte expected to be %d bytes but was %d", 1<<10, s.Byte)
+	}
+	if s.Kilobyte != 1<<10 {
+		t.Errorf("s.Kilobyte expected to be %d bytes but was %d", 1<<10, s.Kilobyte)
+	}
+	if s.Megabyte != 1<<20 {
+		t.Errorf("s.Megabyte expected to be %d but was %d", 1<<20, s.Megabyte)
+	}
+	if s.Gigabyte != 1<<30 {
+		t.Errorf("s.Gigabyte expected to be %d but was %d", 1<<30, s.Gigabyte)
+	}
+	if s.Terabyte != 1<<40 {
+		t.Errorf("s.Terabyte expected to be %d but was %d", 1<<40, s.Terabyte)
+	}
+	if s.Empty != 0 {
+		t.Errorf("s.Empty expected to be 0 but was %d", s.Empty)
+	}
+}
 func addConfig(path, filename string) Config {
 	cfg := Config{
 		Files: make([]File, 0, 1),
