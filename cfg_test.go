@@ -90,22 +90,6 @@ func TestInnerStruct(t *testing.T) {
 	}
 }
 
-func TestArrayConfig(t *testing.T) {
-	type settings struct {
-		GroupList []string `cfg:"group_list"`
-	}
-
-	c := addConfig("./testcfg", "config.conf")
-
-	s := new(settings)
-
-	err := c.MergeConfigsInto(s)
-
-	if err != nil {
-		t.Error(err)
-	}
-}
-
 type loginMethod int
 
 const (
@@ -189,6 +173,7 @@ func TestFileSizes(t *testing.T) {
 		t.Errorf("s.Empty expected to be 0 but was %d", s.Empty)
 	}
 }
+
 func addConfig(path, filename string) Config {
 	cfg := Config{
 		Files: make([]File, 0, 1),
