@@ -95,6 +95,7 @@ func (c Config) MergeConfigsInto(dest interface{}) error {
 		if err != nil {
 			return err
 		}
+
 	}
 
 	return nil
@@ -186,7 +187,10 @@ func searchFields(kv map[string]string, dest interface{}) error {
 
 	for i := 0; i < el.NumField(); i++ {
 		if el.Field(i).Kind() == reflect.Struct {
-			searchFields(kv, el.Field(i).Addr().Interface())
+			err := searchFields(kv, el.Field(i).Addr().Interface())
+			if err != nil {
+				return err
+			}
 			continue
 		}
 		if el.Field(i).CanSet() {
