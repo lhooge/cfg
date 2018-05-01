@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -14,6 +15,11 @@ import (
 	"unicode"
 )
 
+const (
+	tagCfg     = "cfg"
+	tagDefault = "default"
+)
+
 type Config struct {
 	Files []File
 }
@@ -21,6 +27,11 @@ type Config struct {
 type File struct {
 	Name string
 	Path string
+}
+
+type Defaults struct {
+	Value string
+	field reflect.Value
 }
 
 type CustomType interface {
@@ -71,6 +82,7 @@ func (fs *FileSize) Unmarshal(value string) error {
 	return nil
 }
 
+//AddConfig adds a config file
 func (c *Config) AddConfig(path, name string) {
 	f := File{
 		Path: path,
@@ -80,46 +92,70 @@ func (c *Config) AddConfig(path, name string) {
 	c.Files = append(c.Files, f)
 }
 
-func (c Config) MergeConfigsInto(dest interface{}) error {
+//MergeConfigsInto merges multiple configs files into a struct
+//returns the applied default values
+func (c Config) MergeConfigsInto(dest interface{}) (map[string]Defaults, error) {
+	kvs := make(map[string]string)
+
 	for _, v := range c.Files {
 		f, err := os.Open(filepath.Join(v.Path, v.Name))
 
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		defer f.Close()
 
-		err = parse(f, dest)
+		kv, err := parse(f, dest)
 
 		if err != nil {
-			return err
+			return nil, err
 		}
 
+		for k, v := range kv {
+			kvs[k] = v
+		}
 	}
 
-	return nil
+	defaults := make(map[string]Defaults)
+	err := setFields(kvs, defaults, dest)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return defaults, nil
 }
 
-func LoadConfig(file string, dest interface{}) error {
+//LoadConfigInto loads a single config into struct
+//returns the applied default values
+func LoadConfigInto(file string, dest interface{}) (map[string]Defaults, error) {
 	f, err := os.Open(file)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	defer f.Close()
 
-	err = parse(f, dest)
+	kvs, err := parse(f, dest)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	defaults := make(map[string]Defaults)
+
+	err = setFields(kvs, defaults, dest)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return defaults, nil
 }
 
-func parse(file *os.File, dest interface{}) error {
+func parse(file *os.File, dest interface{}) (map[string]string, error) {
 	reader := bufio.NewReader(file)
 	kvmap := make(map[string]string)
 
@@ -130,7 +166,7 @@ func parse(file *os.File, dest interface{}) error {
 			if err == io.EOF {
 				break
 			} else {
-				return err
+				return nil, err
 			}
 		}
 
@@ -155,39 +191,21 @@ func parse(file *os.File, dest interface{}) error {
 		kvmap[key] = value
 	}
 
-	err := searchFields(kvmap, dest)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return kvmap, nil
 }
 
-const (
-	tagCfg     = "cfg"
-	tagDefault = "default"
-)
-
-func searchFields(kv map[string]string, dest interface{}) error {
+func setFields(kv map[string]string, defaults map[string]Defaults, dest interface{}) error {
 	v := reflect.ValueOf(dest)
 
 	if v.Kind() != reflect.Ptr {
 		return errors.New("struct must be a pointer")
 	}
 
-	type reflectDefaults struct {
-		field reflect.Value
-		def   string
-	}
-
-	fieldDefaults := make(map[string]reflectDefaults)
-
 	el := v.Elem()
 
 	for i := 0; i < el.NumField(); i++ {
 		if el.Field(i).Kind() == reflect.Struct {
-			err := searchFields(kv, el.Field(i).Addr().Interface())
+			err := setFields(kv, defaults, el.Field(i).Addr().Interface())
 			if err != nil {
 				return err
 			}
@@ -195,40 +213,48 @@ func searchFields(kv map[string]string, dest interface{}) error {
 		}
 		if el.Field(i).CanSet() {
 			sKey := el.Type().Field(i).Tag.Get(tagCfg)
+			defValue := el.Type().Field(i).Tag.Get(tagDefault)
 
 			if sKey == "-" {
 				continue
-			}
-
-			def := reflectDefaults{
-				field: el.Field(i),
-				def:   el.Type().Field(i).Tag.Get(tagDefault),
 			}
 
 			if len(sKey) == 0 {
 				sKey = el.Type().Field(i).Name
 			}
 
-			fieldDefaults[sKey] = def
+			def := Defaults{}
+
+			if len(defValue) > 0 {
+				def = Defaults{
+					Value: defValue,
+					field: el.Field(i),
+				}
+
+				defaults[sKey] = def
+			}
+
 			value, ok := kv[sKey]
 
 			if ok {
 				err := setField(el.Field(i), value)
 
 				if err != nil {
-					return err
+					if def != (Defaults{}) {
+						//ignore error here if default key has a default
+						continue
+					}
+					return fmt.Errorf("error while setting value [%s] for key [%s] error %v", value, sKey, err)
 				}
 
-				delete(fieldDefaults, sKey)
+				delete(defaults, sKey)
 			}
 		}
 	}
-
-	for _, v := range fieldDefaults {
-		err := setField(v.field, v.def)
-
+	for k, d := range defaults {
+		err := setField(d.field, d.Value)
 		if err != nil {
-			return err
+			return fmt.Errorf("error while setting default value [%s] for key [%s] error %v", d.Value, k, err)
 		}
 	}
 

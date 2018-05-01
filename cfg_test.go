@@ -24,7 +24,7 @@ func TestStandardConfig(t *testing.T) {
 
 	s := new(settings)
 
-	err := c.MergeConfigsInto(s)
+	def, err := c.MergeConfigsInto(s)
 
 	if err != nil {
 		t.Error(err)
@@ -62,6 +62,10 @@ func TestStandardConfig(t *testing.T) {
 	if s.SessionTimeout != expDuration {
 		t.Errorf("SessionTimeout expected to be  but was %v", s.SessionTimeout)
 	}
+
+	if len(def) != 3 {
+		t.Error("expected three entries in applied default values")
+	}
 }
 
 func TestInnerStruct(t *testing.T) {
@@ -76,7 +80,7 @@ func TestInnerStruct(t *testing.T) {
 
 	s := new(settings)
 
-	err := c.MergeConfigsInto(s)
+	_, err := c.MergeConfigsInto(s)
 
 	if err != nil {
 		t.Error(err)
@@ -123,7 +127,7 @@ func TestCustomType(t *testing.T) {
 
 	s := new(settings)
 
-	err := c.MergeConfigsInto(s)
+	_, err := c.MergeConfigsInto(s)
 
 	if err != nil {
 		t.Error(err)
@@ -148,7 +152,7 @@ func TestFileSizes(t *testing.T) {
 
 	s := new(settings)
 
-	err := c.MergeConfigsInto(s)
+	_, err := c.MergeConfigsInto(s)
 
 	if err != nil {
 		t.Error(err)
