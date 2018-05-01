@@ -56,9 +56,9 @@ Unmarshal config into struct
              panic(err)
         }
 	
-	for k, v := range def {				// applied defaults
-	    fmt.Printf("using default value %s for key %s\n", v.Value, k)
-	}
+        for k, v := range def {				// applied defaults
+            fmt.Printf("using default value %s for key %s\n", v.Value, k)
+        }
 
         fmt.Println(settings.ServerPort)
         fmt.Println(settings.Filesize)

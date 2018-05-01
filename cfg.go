@@ -241,7 +241,7 @@ func setFields(kv map[string]string, defaults map[string]Defaults, dest interfac
 
 				if err != nil {
 					if def != (Defaults{}) {
-						//ignore error here if default key has a default
+						//ignore error here if key has a default
 						continue
 					}
 					return fmt.Errorf("error while setting value [%s] for key [%s] error %v", value, sKey, err)
