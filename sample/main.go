@@ -42,11 +42,15 @@ func main() {
 	c.AddConfig(".", "myconfig.conf")
 
 	settings := new(Settings)
-	err := c.MergeConfigsInto(settings)
+	def, err := c.MergeConfigsInto(settings)
 
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(2)
+	}
+
+	for k, v := range def { // applied defaults
+		fmt.Printf("using default value %s for key %s\n", v.Value, k)
 	}
 
 	fmt.Println(settings.ServerPort) // 8080

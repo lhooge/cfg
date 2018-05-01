@@ -1,6 +1,7 @@
 # Simple config reading for Go using reflection
 
-# Usage
+Usage
+-----
 
 Sample config file:
 
@@ -49,11 +50,15 @@ Unmarshal config into struct
         c.AddConfig("/etc", myconfig.conf)		// convenient method for adding a file
         
         settings := new(Settings)		
-        err := c.MergeConfigsInto(settings)		// merges the config values into the setting struct
+        def, err := c.MergeConfigsInto(settings)	// merges the config values into the setting struct
 	
-	    if err != nil {
-	       panic(err)
-	    }
+        if err != nil {
+             panic(err)
+        }
+	
+	for k, v := range def {				// applied defaults
+	    fmt.Printf("using default value %s for key %s\n", v.Value, k)
+	}
 
         fmt.Println(settings.ServerPort)
         fmt.Println(settings.Filesize)
