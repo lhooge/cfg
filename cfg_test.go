@@ -178,8 +178,8 @@ func TestFileSizes(t *testing.T) {
 	}
 }
 
-func addConfig(path, filename string) Config {
-	cfg := Config{
+func addConfig(path, filename string) ConfigFiles {
+	cfg := ConfigFiles{
 		Files: make([]File, 0, 1),
 	}
 

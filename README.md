@@ -16,7 +16,7 @@ Whitespaces before and after the value are trimmed.
 Unmarshal config into struct
 
     type Settings struct {
-        ServerPort int     `cfg:"server_port" default:"8080"`	// config value; if not found in config default is used
+        ServerPort int        `cfg:"server_port" default:"8080"`	// config value; if not found in config default is used
         Filesize cfg.Filesize `cfg:"filesize"`			// returns bytes of specified filesize 
         Log
     }
@@ -46,7 +46,7 @@ Unmarshal config into struct
     }
 
     func main() {
-        c := cfg.Config{}				// create a new config which holds the an array of files
+        c := cfg.ConfigFiles{}				// create a new config which holds the an array of files
         c.AddConfig("/etc", myconfig.conf)		// convenient method for adding a file
         
         settings := new(Settings)		

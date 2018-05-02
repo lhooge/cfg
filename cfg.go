@@ -20,7 +20,7 @@ const (
 	tagDefault = "default"
 )
 
-type Config struct {
+type ConfigFiles struct {
 	Files []File
 }
 
@@ -83,7 +83,7 @@ func (fs *FileSize) Unmarshal(value string) error {
 }
 
 //AddConfig adds a config file
-func (c *Config) AddConfig(path, name string) {
+func (c *ConfigFiles) AddConfig(path, name string) {
 	f := File{
 		Path: path,
 		Name: name,
@@ -94,7 +94,7 @@ func (c *Config) AddConfig(path, name string) {
 
 //MergeConfigsInto merges multiple configs files into a struct
 //returns the applied default values
-func (c Config) MergeConfigsInto(dest interface{}) (map[string]Defaults, error) {
+func (c ConfigFiles) MergeConfigsInto(dest interface{}) (map[string]Defaults, error) {
 	kvs := make(map[string]string)
 
 	for _, v := range c.Files {

@@ -38,7 +38,7 @@ func (lm *LogLevel) Unmarshal(value string) error {
 }
 
 func main() {
-	c := cfg.Config{}
+	c := cfg.ConfigFiles{}
 	c.AddConfig(".", "myconfig.conf")
 
 	settings := new(Settings)
