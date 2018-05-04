@@ -29,7 +29,7 @@ type File struct {
 	Path string
 }
 
-type Defaults struct {
+type Default struct {
 	Value string
 	field reflect.Value
 }
@@ -94,7 +94,7 @@ func (c *ConfigFiles) AddConfig(path, name string) {
 
 //MergeConfigsInto merges multiple configs files into a struct
 //returns the applied default values
-func (c ConfigFiles) MergeConfigsInto(dest interface{}) (map[string]Defaults, error) {
+func (c ConfigFiles) MergeConfigsInto(dest interface{}) (map[string]Default, error) {
 	kvs := make(map[string]string)
 
 	for _, v := range c.Files {
@@ -117,7 +117,7 @@ func (c ConfigFiles) MergeConfigsInto(dest interface{}) (map[string]Defaults, er
 		}
 	}
 
-	defaults := make(map[string]Defaults)
+	defaults := make(map[string]Default)
 	err := setFields(kvs, defaults, dest)
 
 	if err != nil {
@@ -129,7 +129,7 @@ func (c ConfigFiles) MergeConfigsInto(dest interface{}) (map[string]Defaults, er
 
 //LoadConfigInto loads a single config into struct
 //returns the applied default values
-func LoadConfigInto(file string, dest interface{}) (map[string]Defaults, error) {
+func LoadConfigInto(file string, dest interface{}) (map[string]Default, error) {
 	f, err := os.Open(file)
 
 	if err != nil {
@@ -144,7 +144,7 @@ func LoadConfigInto(file string, dest interface{}) (map[string]Defaults, error) 
 		return nil, err
 	}
 
-	defaults := make(map[string]Defaults)
+	defaults := make(map[string]Default)
 
 	err = setFields(kvs, defaults, dest)
 
@@ -194,7 +194,7 @@ func parse(file *os.File, dest interface{}) (map[string]string, error) {
 	return kvmap, nil
 }
 
-func setFields(kv map[string]string, defaults map[string]Defaults, dest interface{}) error {
+func setFields(kv map[string]string, defaults map[string]Default, dest interface{}) error {
 	v := reflect.ValueOf(dest)
 
 	if v.Kind() != reflect.Ptr {
@@ -223,10 +223,10 @@ func setFields(kv map[string]string, defaults map[string]Defaults, dest interfac
 				sKey = el.Type().Field(i).Name
 			}
 
-			def := Defaults{}
+			def := Default{}
 
 			if len(defValue) > 0 {
-				def = Defaults{
+				def = Default{
 					Value: defValue,
 					field: el.Field(i),
 				}
@@ -240,7 +240,7 @@ func setFields(kv map[string]string, defaults map[string]Defaults, dest interfac
 				err := setField(el.Field(i), value)
 
 				if err != nil {
-					if def != (Defaults{}) {
+					if def != (Default{}) {
 						//ignore error here if key has a default
 						continue
 					}
