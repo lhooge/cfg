@@ -183,7 +183,7 @@ func addConfig(path, filename string) ConfigFiles {
 		Files: make([]File, 0, 1),
 	}
 
-	cfg.AddConfig(path, filename)
+	cfg.AddConfig(path, filename, true)
 
 	return cfg
 }

@@ -20,24 +20,32 @@ const (
 	tagDefault = "default"
 )
 
+// ConfigFiles represents multiple file containing the config keys and values
 type ConfigFiles struct {
 	Files []File
 }
 
+// File represents a file
+// Required if an error should be thrown if file is absent
 type File struct {
-	Name string
-	Path string
+	Name     string
+	Path     string
+	Required bool
 }
 
+// Default represents a default value for a field
 type Default struct {
 	Value string
 	field reflect.Value
 }
 
+// CustomType can be implemented to unmarshal in a custom format
 type CustomType interface {
 	Unmarshal(value string) error
 }
 
+// FileSize implements Unmarshal for parsing a file size config value.
+// e.g. 10MB
 type FileSize uint64
 
 func (fs *FileSize) Unmarshal(value string) error {
@@ -48,7 +56,7 @@ func (fs *FileSize) Unmarshal(value string) error {
 		return nil
 	}
 
-	value = strings.ToLower(value)
+	value = strings.TrimSpace(strings.ToLower(value))
 	last := len(value) - 1
 
 	mp := uint64(1)
@@ -83,10 +91,11 @@ func (fs *FileSize) Unmarshal(value string) error {
 }
 
 //AddConfig adds a config file
-func (c *ConfigFiles) AddConfig(path, name string) {
+func (c *ConfigFiles) AddConfig(path, name string, required bool) {
 	f := File{
-		Path: path,
-		Name: name,
+		Path:     path,
+		Name:     name,
+		Required: required,
 	}
 
 	c.Files = append(c.Files, f)
@@ -101,6 +110,9 @@ func (c ConfigFiles) MergeConfigsInto(dest interface{}) (map[string]Default, err
 		f, err := os.Open(filepath.Join(v.Path, v.Name))
 
 		if err != nil {
+			if !v.Required {
+				continue
+			}
 			return nil, err
 		}
 
