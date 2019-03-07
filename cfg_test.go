@@ -160,7 +160,7 @@ func TestFileSizes(t *testing.T) {
 	}
 
 	if s.Byte != 5 {
-		t.Errorf("s.Byte expected to be %d bytes but was %d bytes", 5, s.Byte)
+		t.Errorf("s.Byte expected to be %d bytes but was %d", 5, s.Byte)
 	}
 	if s.Kilobyte != 1<<10 {
 		t.Errorf("s.Kilobyte expected to be %d bytes but was %d", 1<<10, s.Kilobyte)
@@ -177,6 +177,7 @@ func TestFileSizes(t *testing.T) {
 	if s.Empty != 0 {
 		t.Errorf("s.Empty expected to be 0 but was %d", s.Empty)
 	}
+
 }
 
 func addConfig(path, filename string) ConfigFiles {
