@@ -1,7 +1,6 @@
 package cfg
 
 import (
-	"fmt"
 	"testing"
 	"time"
 )
@@ -160,8 +159,8 @@ func TestFileSizes(t *testing.T) {
 		t.Error(err)
 	}
 
-	if s.Byte != 1<<10 {
-		t.Errorf("s.Byte expected to be %d bytes but was %d", 1<<10, s.Byte)
+	if s.Byte != 5 {
+		t.Errorf("s.Byte expected to be %d bytes but was %d bytes", 5, s.Byte)
 	}
 	if s.Kilobyte != 1<<10 {
 		t.Errorf("s.Kilobyte expected to be %d bytes but was %d", 1<<10, s.Kilobyte)
@@ -178,12 +177,6 @@ func TestFileSizes(t *testing.T) {
 	if s.Empty != 0 {
 		t.Errorf("s.Empty expected to be 0 but was %d", s.Empty)
 	}
-
-	fmt.Println(s.Byte.HumanReadable())
-	fmt.Println(s.Kilobyte.HumanReadable())
-	fmt.Println(s.Megabyte.HumanReadable())
-	fmt.Println(s.Gigabyte.HumanReadable())
-	fmt.Println(s.Terabyte.HumanReadable())
 }
 
 func addConfig(path, filename string) ConfigFiles {
