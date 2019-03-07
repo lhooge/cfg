@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -47,6 +48,30 @@ type CustomType interface {
 // FileSize implements Unmarshal for parsing a file size config value.
 // e.g. 10MB
 type FileSize uint64
+
+const (
+	B = 1 << (iota * 10)
+	KB
+	MB
+	GB
+	TB
+)
+
+var sizes = []string{"B", "KB", "MB", "GB", "TB"}
+
+func (fs FileSize) HumanReadable() string {
+	exp := math.Round(math.Log(float64(fs)) / math.Log(1024))
+
+	s := sizes[int(exp)]
+
+	if exp == 0 {
+		return fmt.Sprintf("%d %s", fs, s)
+	}
+
+	val := float64(fs) / float64(math.Pow(1024, exp))
+
+	return fmt.Sprintf("%.2f %s", val, s)
+}
 
 func (fs *FileSize) Unmarshal(value string) error {
 	size := FileSize(0)

@@ -1,6 +1,7 @@
 package cfg
 
 import (
+	"fmt"
 	"testing"
 	"time"
 )
@@ -66,6 +67,7 @@ func TestStandardConfig(t *testing.T) {
 	if len(def) != 3 {
 		t.Error("expected three entries in applied default values")
 	}
+
 }
 
 func TestInnerStruct(t *testing.T) {
@@ -176,6 +178,12 @@ func TestFileSizes(t *testing.T) {
 	if s.Empty != 0 {
 		t.Errorf("s.Empty expected to be 0 but was %d", s.Empty)
 	}
+
+	fmt.Println(s.Byte.HumanReadable())
+	fmt.Println(s.Kilobyte.HumanReadable())
+	fmt.Println(s.Megabyte.HumanReadable())
+	fmt.Println(s.Gigabyte.HumanReadable())
+	fmt.Println(s.Terabyte.HumanReadable())
 }
 
 func addConfig(path, filename string) ConfigFiles {
