@@ -60,11 +60,16 @@ const (
 var sizes = []string{"B", "KB", "MB", "GB", "TB"}
 
 func (fs FileSize) HumanReadable() string {
+	if fs == 0 {
+		return "0"
+	}
+
 	exp := math.Floor(math.Log(float64(fs)) / math.Log(1024))
 
 	if exp > 4 {
 		exp = 4
 	}
+
 	s := sizes[int(exp)]
 
 	if exp == 0 {
@@ -73,7 +78,7 @@ func (fs FileSize) HumanReadable() string {
 
 	val := float64(fs) / float64(math.Pow(1024, exp))
 
-	return fmt.Sprintf("%s %s", strings.TrimRight(strings.TrimRight(fmt.Sprintf("%.2f", val), "0"), "."), s)
+	return fmt.Sprintf("%.1f %s", math.Ceil(float64(val)*10)/10, s)
 }
 
 func (fs *FileSize) Unmarshal(value string) error {

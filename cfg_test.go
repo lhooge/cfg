@@ -1,8 +1,10 @@
-package cfg
+package cfg_test
 
 import (
 	"testing"
 	"time"
+
+	"git.hoogi.eu/cfg"
 )
 
 func TestStandardConfig(t *testing.T) {
@@ -95,6 +97,27 @@ func TestInnerStruct(t *testing.T) {
 	}
 }
 
+func TestHumanizeFilesize(t *testing.T) {
+	var fileSizes = []struct {
+		fs       cfg.FileSize
+		expected string
+	}{
+		{cfg.FileSize(0), "0"},
+		{cfg.FileSize(6680), "6.6 KB"},
+		{cfg.FileSize(4314), "4.3 KB"},
+		{cfg.FileSize(237797290), "226.8 MB"},
+		{cfg.FileSize(4096), "4.0 KB"},
+	}
+
+	for _, v := range fileSizes {
+		actual := v.fs.HumanReadable()
+
+		if actual != v.expected {
+			t.Errorf("HumanReadable(%d): expected %s, actual %s", uint64(v.fs), v.expected, actual)
+		}
+	}
+}
+
 type loginMethod int
 
 const (
@@ -141,12 +164,12 @@ func TestCustomType(t *testing.T) {
 
 func TestFileSizes(t *testing.T) {
 	type settings struct {
-		Byte     FileSize `cfg:"file_size_byte"`
-		Kilobyte FileSize `cfg:"file_size_kilobyte"`
-		Megabyte FileSize `cfg:"file_size_megabyte"`
-		Gigabyte FileSize `cfg:"file_size_gigabyte"`
-		Terabyte FileSize `cfg:"file_size_terabyte"`
-		Empty    FileSize `cfg:"file_size_empty"`
+		Byte     cfg.FileSize `cfg:"file_size_byte"`
+		Kilobyte cfg.FileSize `cfg:"file_size_kilobyte"`
+		Megabyte cfg.FileSize `cfg:"file_size_megabyte"`
+		Gigabyte cfg.FileSize `cfg:"file_size_gigabyte"`
+		Terabyte cfg.FileSize `cfg:"file_size_terabyte"`
+		Empty    cfg.FileSize `cfg:"file_size_empty"`
 	}
 
 	c := addConfig("./testcfg", "config.conf")
@@ -180,9 +203,9 @@ func TestFileSizes(t *testing.T) {
 
 }
 
-func addConfig(path, filename string) ConfigFiles {
-	cfg := ConfigFiles{
-		Files: make([]File, 0, 1),
+func addConfig(path, filename string) cfg.ConfigFiles {
+	cfg := cfg.ConfigFiles{
+		Files: make([]cfg.File, 0, 1),
 	}
 
 	cfg.AddConfig(path, filename, true)
