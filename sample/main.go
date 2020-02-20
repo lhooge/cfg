@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"git.hoogi.eu/cfg"
+	"git.hoogi.eu/snafu/cfg"
 )
 
 type Settings struct {

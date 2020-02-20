@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"git.hoogi.eu/cfg"
+	"git.hoogi.eu/snafu/cfg"
 )
 
 func TestStandardConfig(t *testing.T) {
