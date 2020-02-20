@@ -1,3 +1,3 @@
-module git.hoogi.eu/cfg
+module git.hoogi.eu/snafu/cfg
 
-go 1.12
+go 1.13
