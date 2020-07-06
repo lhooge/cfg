@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io"
 	"math"
 	"os"
 	"path/filepath"
@@ -59,6 +58,7 @@ const (
 
 var sizes = []string{"B", "KB", "MB", "GB", "TB"}
 
+//HumanReadable returns a human readable form of the filesize e.g 12.5 MB, 1.0 GB
 func (fs FileSize) HumanReadable() string {
 	if fs == 0 {
 		return "0"
@@ -201,19 +201,11 @@ func LoadConfigInto(file string, dest interface{}) (map[string]Default, error) {
 }
 
 func parse(file *os.File, dest interface{}) (map[string]string, error) {
-	reader := bufio.NewReader(file)
+	scanner := bufio.NewScanner(file)
 	kvmap := make(map[string]string)
 
-	for {
-		line, err := reader.ReadBytes('\n')
-
-		if err != nil {
-			if err == io.EOF {
-				break
-			} else {
-				return nil, err
-			}
-		}
+	for scanner.Scan() {
+		line := scanner.Bytes()
 
 		line = bytes.TrimLeftFunc(line, unicode.IsSpace)
 
@@ -234,6 +226,9 @@ func parse(file *os.File, dest interface{}) (map[string]string, error) {
 		key := string(bytes.TrimRightFunc(kv[0], unicode.IsSpace))
 		value := string(bytes.TrimSpace(bytes.TrimRight(kv[1], "\r\n")))
 		kvmap[key] = value
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, err
 	}
 
 	return kvmap, nil
