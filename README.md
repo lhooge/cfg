@@ -16,24 +16,34 @@ Whitespaces before and after the value are trimmed.
 Unmarshal config into struct
 
     type Settings struct {
-        ServerPort int        `cfg:"server_port" default:"8080"`	// config value; if not found in config default is used
-        Filesize cfg.Filesize `cfg:"filesize"`			// returns bytes of specified filesize 
+        //ServerPort config value; if key not found in config the default 8080 is used
+        ServerPort int        `cfg:"server_port" default:"8080"`
+        //Filesize returns bytes of specified filesize 
+        Filesize cfg.Filesize `cfg:"filesize"`
+        //Log the nested struct
         Log
     }
 
     type Log struct {
-        File    string   `cfg:"log_file"`	// config value without default; if not found an error is returned
-        Level   LogLevel `cfg:"log_level"`	// custom LogLevel type unmarshals the value "info" or "debug" into type LogLevel
+        //File config key without default value; if not found an error is returned
+        File    string   `cfg:"log_file"`	
+        //Level type LogLevel unmarshals the value "info" or "debug" into type LogLevel
+        Level   LogLevel `cfg:"log_level"`	
     }
 
-    type LogLevel int				// custom int type which holds the log level
+    // LogLevel custom int type which holds the log level
+    type LogLevel int
 
-    const (
-        Info = iota				// iota value for log levels
+    //Possible log levels
+    const (    
+        //Info logs everything with severity "Info"
+        Info = iota
+        //Debug logs everything with severity "Debug"
         Debug
     )
 
-    func (lm *LogLevel) Unmarshal(value string) error {		// the custom unmarshaler for the log level
+    // Unmarshal the custom unmarshaler for the log level
+    func (lm *LogLevel) Unmarshal(value string) error {		
         if strings.ToLower(value) == "info" {
                 *lm = LogLevel(Info)
                 return nil
@@ -46,11 +56,14 @@ Unmarshal config into struct
     }
 
     func main() {
-        c := cfg.ConfigFiles{}				// create a new config which holds the an array of files
-        c.AddConfig("/etc", myconfig.conf)		// convenient method for adding a file
+        // create a new ConfigFiles structure
+        c := cfg.ConfigFiles{}
+        // search for a config 'myconfig.conf' in folder '/etc' it fails if file is not found.
+        c.AddConfig("/etc", myconfig.conf, true)	
         
         settings := new(Settings)		
-        def, err := c.MergeConfigsInto(settings)	// merges the config values into the setting struct
+        // merges the config values into the settings struct
+        def, err := c.MergeConfigsInto(settings)	
 	
         if err != nil {
              panic(err)
