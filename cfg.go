@@ -143,7 +143,7 @@ func (c ConfigFiles) MergeConfigsInto(dest interface{}) (map[string]Default, err
 		f, err := os.Open(filepath.Join(v.Path, v.Name))
 
 		if err != nil {
-			if !v.Required {
+			if !v.Required && os.IsNotExist(err) {
 				continue
 			}
 			return nil, err

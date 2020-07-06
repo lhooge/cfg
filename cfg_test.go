@@ -7,6 +7,33 @@ import (
 	"git.hoogi.eu/snafu/cfg"
 )
 
+func TestFailConfig(t *testing.T) {
+	type settings struct {
+		Server struct {
+			Address string `cfg:"server_address"`
+			Port    int    `cfg:"server_port"`
+		}
+	}
+
+	c := addConfig("./testcfg", "notexisting.conf", true)
+
+	s := new(settings)
+
+	_, err := c.MergeConfigsInto(s)
+
+	if err == nil {
+		t.Error(err)
+	}
+
+	c = addConfig("./testcfg", "notexisting.conf", false)
+
+	_, err = c.MergeConfigsInto(s)
+
+	if err != nil {
+		t.Error(err)
+	}
+}
+
 func TestStandardConfig(t *testing.T) {
 	type settings struct {
 		SessionName  string `cfg:"session_name"`
@@ -22,7 +49,7 @@ func TestStandardConfig(t *testing.T) {
 		SessionTimeout time.Duration `cfg:"session_timeout"`
 	}
 
-	c := addConfig("./testcfg", "config.conf")
+	c := addConfig("./testcfg", "config.conf", true)
 
 	s := new(settings)
 
@@ -79,7 +106,7 @@ func TestInnerStruct(t *testing.T) {
 		}
 	}
 
-	c := addConfig("./testcfg", "config.conf")
+	c := addConfig("./testcfg", "config.conf", true)
 
 	s := new(settings)
 
@@ -147,7 +174,7 @@ func TestCustomType(t *testing.T) {
 		Custom loginMethod `cfg:"login_method"`
 	}
 
-	c := addConfig("./testcfg", "config.conf")
+	c := addConfig("./testcfg", "config.conf", true)
 
 	s := new(settings)
 
@@ -172,7 +199,7 @@ func TestFileSizes(t *testing.T) {
 		Empty    cfg.FileSize `cfg:"file_size_empty"`
 	}
 
-	c := addConfig("./testcfg", "config.conf")
+	c := addConfig("./testcfg", "config.conf", true)
 
 	s := new(settings)
 
@@ -203,12 +230,12 @@ func TestFileSizes(t *testing.T) {
 
 }
 
-func addConfig(path, filename string) cfg.ConfigFiles {
+func addConfig(path, filename string, required bool) cfg.ConfigFiles {
 	cfg := cfg.ConfigFiles{
 		Files: make([]cfg.File, 0, 1),
 	}
 
-	cfg.AddConfig(path, filename, true)
+	cfg.AddConfig(path, filename, required)
 
 	return cfg
 }
